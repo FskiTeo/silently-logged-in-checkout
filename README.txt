@@ -1,114 +1,191 @@
-=== Plugin Name ===
-Contributors: (this should be a list of wordpress.org userid's)
-Donate link: https://tfia.fr/
-Tags: comments, spam
-Requires at least: 3.0.1
-Tested up to: 3.4
-Stable tag: 4.3
-License: GPLv2 or later
-License URI: http://www.gnu.org/licenses/gpl-2.0.html
-
-Here is a short description of the plugin.  This should be no more than 150 characters.  No markup here.
+Permet une connexion silencieuse et automatique des utilisateurs lors du passage en caisse WooCommerce via vérification par email et code OTP.
 
 == Description ==
 
-This is the long description.  No limit, and you can use Markdown (as well as in the following sections).
+Le plugin "Silently Logged In Checkout" simplifie le processus de connexion pour vos clients WooCommerce. Au lieu de forcer les utilisateurs non connectés à créer manuellement un compte ou à utiliser un formulaire de connexion complexe, ce plugin leur permet de :
 
-For backwards compatibility, if this section is missing, the full length of the short description will be used, and
-Markdown parsed.
+1. Entrer simplement leur adresse email
+2. Recevoir un code OTP (One-Time Password) à 6 chiffres par email
+3. Vérifier le code reçu
+4. Être connectés et créer un compte WooCommerce automatiquement
+5. Accéder directement à la page de paie
 
-A few notes about the sections above:
-
-*   "Contributors" is a comma separated list of wp.org/wp-plugins.org usernames
-*   "Tags" is a comma separated list of tags that apply to the plugin
-*   "Requires at least" is the lowest version that the plugin will work on
-*   "Tested up to" is the highest version that you've *successfully used to test the plugin*. Note that it might work on
-higher versions... this is just the highest one you've verified.
-*   Stable tag should indicate the Subversion "tag" of the latest stable version, or "trunk," if you use `/trunk/` for
-stable.
-
-    Note that the `readme.txt` of the stable tag is the one that is considered the defining one for the plugin, so
-if the `/trunk/readme.txt` file says that the stable tag is `4.3`, then it is `/tags/4.3/readme.txt` that'll be used
-for displaying information about the plugin.  In this situation, the only thing considered from the trunk `readme.txt`
-is the stable tag pointer.  Thus, if you develop in trunk, you can update the trunk `readme.txt` to reflect changes in
-your in-development version, without having that information incorrectly disclosed about the current stable version
-that lacks those changes -- as long as the trunk's `readme.txt` points to the correct stable tag.
-
-    If no stable tag is provided, it is assumed that trunk is stable, but you should specify "trunk" if that's where
-you put the stable version, in order to eliminate any doubt.
+**Avantages :**
+- Expérience utilisateur fluide et sans friction
+- Les clients n'ont pas besoin de choisir un mot de passe (réduit les oublis)
+- Compatible avec les thèmes WordPress moderne (y compris FSE - Full Site Editing)
+- Configuration simple via le menu d'administration WooCommerce
+- Emails personnalisés avec le nom de votre boutique
+- Gestion sécurisée des codes OTP avec transients WordPress
 
 == Installation ==
 
-This section describes how to install the plugin and get it working.
+1. Téléchargez le fichier ZIP du plugin
+2. Allez à **Extensions > Ajouter** dans votre tableau de bord WordPress
+3. Cliquez sur **Importer une extension** et sélectionnez le fichier ZIP
+4. Activez le plugin
+5. Accédez à **WooCommerce > Silently Logged In** pour configurer les pages
 
-e.g.
+**Ou manuellement :**
+1. Décompressez le fichier ZIP
+2. Uploadez le dossier `silently-loggedin-checkout` dans `/wp-content/plugins/`
+3. Activez le plugin depuis le menu Extensions
+4. Configurez le plugin (voir section Configuration)
 
-1. Upload `silently-loggedin-checkout.php` to the `/wp-content/plugins/` directory
-1. Activate the plugin through the 'Plugins' menu in WordPress
-1. Place `<?php do_action('plugin_name_hook'); ?>` in your templates
+== Configuration ==
 
-== Frequently Asked Questions ==
+=== Paramètres initiaux ===
 
-= A question that someone might have =
+Après activation, rendez-vous dans **WooCommerce > Silently Logged In Checkout** pour configurer :
 
-An answer to that question.
+**1. Page de formulaire email**
+   - Sélectionnez la page qui contiendra le formulaire `[slc_email_prompt]`
+   - Cette page sera accessible après désactivation d'une session utilisateur
+   - Les utilisateurs y entreront leur adresse email pour lancer le processus
 
-= What about foo bar? =
+**2. Page de vérification OTP**
+   - Sélectionnez la page qui contiendra le formulaire `[slc_otp_verify]`
+   - Cette page affichera un formulaire pour entrer le code OTP reçu par email
+   - Doit être la même pour tous les clients afin assurer la cohérence
 
-Answer to foo bar dilemma.
+**3. Page de redirection (utilisateurs connectés)**
+   - Sélectionnez la page où rediriger les utilisateurs **déjà connectés** qui visitent l'une des deux pages ci-dessus
+   - Généralement, c'est la page de paie WooCommerce ou votre page d'accueil
+   - Si non configurée, redirection automatique vers la page de paie WooCommerce par défaut
 
-== Screenshots ==
+=== Créer les pages ===
 
-1. This screen shot description corresponds to screenshot-1.(png|jpg|jpeg|gif). Note that the screenshot is taken from
-the /assets directory or the directory that contains the stable readme.txt (tags or trunk). Screenshots in the /assets
-directory take precedence. For example, `/assets/screenshot-1.png` would win over `/tags/4.3/screenshot-1.png`
-(or jpg, jpeg, gif).
-2. This is the second screen shot
+Vous devez créer au moins deux pages WordPress contenant les shortcodes :
 
-== Changelog ==
+**Page 1 : Formulaire email**
+- Création : **Pages > Ajouter**
+- Titre suggéré : "Connexion rapide" ou "Vérification email"
+- Contenu : Ajoutez simplement `[slc_email_prompt]` dans l'éditeur
+- Sauvegardez et notez l'ID de la page
+- Sélectionnez-la dans la configuration du plugin
 
-= 1.0 =
-* A change since the previous version.
-* Another change.
+**Page 2 : Formulaire OTP**
+- Création : **Pages > Ajouter**
+- Titre suggéré : "Vérification du code" ou "Confirmer votre code"
+- Contenu : Ajoutez simplement `[slc_otp_verify]` dans l'éditeur
+- Sauvegardez et notez l'ID de la page
+- Sélectionnez-la dans la configuration du plugin
 
-= 0.5 =
-* List versions from most recent at top to oldest at bottom.
+== Utilisation ==
 
-== Upgrade Notice ==
+=== Flux utilisateur normal ===
 
-= 1.0 =
-Upgrade notices describe the reason a user should upgrade.  No more than 300 characters.
+1. **Utilisateur non connecté** visite la page de paie WooCommerce
+2. **WooCommerce** le redirige vers la page de formulaire email (configurable via WooCommerce)
+3. **Utilisateur** entre son email et clique sur "Envoyer le code"
+4. **Plugin** :
+   - Génère un code OTP à 6 chiffres
+   - Stocke le code en toute sécurité pendant 10 minutes
+   - Envoie un email avec le code
+5. **Utilisateur** reçoit l'email et est redirigé vers la page de vérification
+6. **Utilisateur** entre son code OTP
+7. **Plugin** :
+   - Valide le code
+   - Crée un compte WooCommerce avec l'email fourni
+   - Connecte automatiquement l'utilisateur
+8. **Utilisateur** est redirigé vers la page de paie (checkout)
+9. **Utilisateur** finalise l'achat en tant qu'utilisateur connecté
 
-= 0.5 =
-This version fixes a security related bug.  Upgrade immediately.
+=== Personnalisation stylistique ===
 
-== Arbitrary section ==
+Le plugin utilise un fichier CSS pour styliser les formulaires : `public/css/silently-loggedin-checkout-public.css`
 
-You may provide arbitrary sections, in the same format as the ones above.  This may be of use for extremely complicated
-plugins where more information needs to be conveyed that doesn't fit into the categories of "description" or
-"installation."  Arbitrary sections will be shown below the built-in sections outlined above.
+**Classes CSS disponibles :**
+- `.slc-form-wrapper` : Conteneur principal des formulaires
+- `.slc-error` : Messages d'erreur (couleur rouge)
+- `input[type="email"]`, `input[type="text"]` : Champs de formulaire
+- `button[type="submit"]` : Boutons de soumission
 
-== A brief Markdown Example ==
+Modifiez directement le fichier CSS ou ajoutez du CSS personnalisé dans votre thème pour adapter l'apparence à l'identité visuelle de votre boutique.
 
-Ordered list:
+=== Emails ===
 
-1. Some feature
-1. Another feature
-1. Something else about the plugin
+Le plugin envoie des emails automatiquement lors de la génération du code OTP.
 
-Unordered list:
+**Email envoyé :**
+- **Objet** : "Votre code de connexion [Nom de la boutique]"
+- **Contenu** : 
+  - Salutation
+  - Code OTP en 6 chiffres
+  - Durée de validité (10 minutes)
+  - Note de sécurité
 
-* something
-* something else
-* third thing
+L'email est envoyé au format HTML et inclut automatiquement le nom de votre boutique.
 
-Here's a link to [WordPress](http://wordpress.org/ "Your favorite software") and one to [Markdown's Syntax Documentation][markdown syntax].
-Titles are optional, naturally.
+== Livrables ==
 
-[markdown syntax]: http://daringfireball.net/projects/markdown/syntax
-            "Markdown is what the parser uses to process much of the readme file"
+=== Shortcodes ===
 
-Markdown uses email style notation for blockquotes and I've been told:
-> Asterisks for *emphasis*. Double it up  for **strong**.
+**`[slc_email_prompt]`**
+- Affiche le formulaire de saisie d'email
+- Aucun paramètre requis
+- Utilisez-le dans une page WordPress
 
-`<?php code(); // goes in backticks ?>`
+**`[slc_otp_verify]`**
+- Affiche le formulaire de saisie du code OTP
+- Aucun paramètre requis
+- Utilisez-le dans une page WordPress
+- Redirige automatiquement vers le formulaire email si l'utilisateur accède sans passer par le flux normal
+
+== Questions fréquentes ==
+
+**Q : Quel est le délai d'expiration du code OTP?**
+A : 10 minutes. Après ce délai, l'utilisateur doit recommencer depuis le début.
+
+**Q : Combien de fois l'utilisateur peut-il entrer le mauvais code?**
+A : 3 tentatives maximum. Après 3 tentatives échouées, le code OTP est invalidé.
+
+**Q : Le plugin fonctionne-t-il avec tous les thèmes WordPress?**
+A : Oui, le plugin fonctionne avec tous les thèmes, y compris les thèmes Full Site Editing (FSE). Il génère des pages indépendantes du thème, ce qui signifie que votre en-tête et pied de page personnalisés s'afficheront normalement.
+
+**Q : Les mots de passe des utilisateurs?**
+A : Le plugin génère des comptes WooCommerce avec des mots de passe aléatoires ou en utilisant l'email comme unique identifier. Les utilisateurs peuvent modifier leur mot de passe ensuite s'ils le souhaitent.
+
+**Q : Comment puis-je tester le plugin?**
+A : 
+1. Déconnectez-vous
+2. Rendez-vous sur la page de paie
+3. Entrez une adresse email valide
+4. Vérifiez votre boîte mail pour le code OTP
+5. Entrez le code sur la page de vérification
+
+**Q : Que se passe-t-il si un utilisateur déjà connecté visite la page?**
+A : Il est automatiquement redirigé vers la page configurée dans les paramètres (par défaut, la page de paie WooCommerce).
+
+== Sécurité ==
+
+- **Codes OTP** : Générés de façon cryptographique et stockés via l'API WordPress Transients
+- **Validation CSRF** : Tous les formulaires incluent des vérifications de nonce WordPress
+- **Hachage d'email** : Les emails sont hachés (MD5) lors du stockage du code OTP
+- **Limitation de tentatives** : Maximum 3 tentatives de code incorrect avant invalidation
+- **HTTPS recommandé** : Bien que non obligatoire, HTTPS est fortement recommandé
+
+== Support ==
+
+Pour toute question ou problème :
+- Consultez la section "Questions fréquentes"
+- Vérifiez que WooCommerce est activé et mis à jour
+- Vérifiez que les pages sont correctement configurées dans le menu admin
+- Assurez-vous que vos serveur de messagerie WordPress est correctement configuré pour envoyer des emails
+
+== Historique des modifications ==
+
+= 1.0.0 =
+- Version initiale
+- Formulaires de connexion par email et OTP
+- Création automatique de comptes WooCommerce
+- Redirection intelligente des utilisateurs connectés
+- Configuration via le panneau d'administration WooCommerce
+
+== Licence ==
+
+Ce plugin est sous licence GPL-2.0+. Consultez LICENSE.txt pour plus de détails.
+
+== Auteur ==
+
+Développé par Téo F
