@@ -14,11 +14,9 @@
  *
  * @wordpress-plugin
  * Plugin Name:       Silently Logged In Checkout
- * Plugin URI:        https://tfia.fr
  * Description:       This plugin allows a silently logged in checkout by prompting user email and creating an account silently before checkout.
  * Version:           1.0.0
  * Author:            Téo F
- * Author URI:        https://tfia.fr/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       silently-loggedin-checkout
@@ -30,12 +28,8 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-/**
- * Currently plugin version.
- * Start at version 1.0.0 and use SemVer - https://semver.org
- * Rename this for your plugin and update it as you release new versions.
- */
 define( 'SILENTLY_LOGGEDIN_CHECKOUT_VERSION', '1.0.0' );
+define( 'SILENTLY_LOGGEDIN_CHECKOUT_PLUGIN_FILE', __FILE__ );
 
 /**
  * The code that runs during plugin activation.
@@ -66,17 +60,23 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-silently-loggedin-checkout
 
 /**
  * Begins execution of the plugin.
- *
- * Since everything within the plugin is registered via hooks,
- * then kicking off the plugin from this point in the file does
- * not affect the page life cycle.
+ * Hooked to plugins_loaded so WooCommerce is guaranteed to be loaded first.
  *
  * @since    1.0.0
  */
 function run_silently_loggedin_checkout() {
 
+	if ( ! class_exists( 'WooCommerce' ) ) {
+		add_action( 'admin_notices', function () {
+			echo '<div class="notice notice-error"><p>' .
+				esc_html__( 'Silently Logged In Checkout nécessite que WooCommerce soit installé et actif.', 'silently-loggedin-checkout' ) .
+				'</p></div>';
+		} );
+		return;
+	}
+
 	$plugin = new Silently_Loggedin_Checkout();
 	$plugin->run();
 
 }
-run_silently_loggedin_checkout();
+add_action( 'plugins_loaded', 'run_silently_loggedin_checkout' );

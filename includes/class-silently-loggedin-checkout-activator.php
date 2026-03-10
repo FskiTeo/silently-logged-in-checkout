@@ -3,7 +3,6 @@
 /**
  * Fired during plugin activation
  *
- * @link       https://tfia.fr
  * @since      1.0.0
  *
  * @package    Silently_Loggedin_Checkout
@@ -30,6 +29,15 @@ class Silently_Loggedin_Checkout_Activator {
 	 * @since    1.0.0
 	 */
 	public static function activate() {
+
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			deactivate_plugins( plugin_basename( SILENTLY_LOGGEDIN_CHECKOUT_PLUGIN_FILE ) );
+			wp_die(
+				'<p>' . esc_html__( 'Silently Logged In Checkout nécessite que WooCommerce soit installé et actif.', 'silently-loggedin-checkout' ) . '</p>',
+				esc_html__( 'Erreur d\'activation du plugin', 'silently-loggedin-checkout' ),
+				array( 'back_link' => true )
+			);
+		}
 
 	}
 

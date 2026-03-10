@@ -3,7 +3,6 @@
 /**
  * Fired during plugin deactivation
  *
- * @link       https://tfia.fr
  * @since      1.0.0
  *
  * @package    Silently_Loggedin_Checkout
@@ -30,6 +29,8 @@ class Silently_Loggedin_Checkout_Deactivator {
 	 * @since    1.0.0
 	 */
 	public static function deactivate() {
+
+		flush_rewrite_rules();
 
 	}
 

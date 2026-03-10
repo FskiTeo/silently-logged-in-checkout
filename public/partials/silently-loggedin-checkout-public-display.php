@@ -5,7 +5,6 @@
  *
  * This file is used to markup the public-facing aspects of the plugin.
  *
- * @link       https://tfia.fr
  * @since      1.0.0
  *
  * @package    Silently_Loggedin_Checkout

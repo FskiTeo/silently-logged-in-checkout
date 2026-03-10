@@ -19,7 +19,6 @@
  * For more information, see the following discussion:
  * https://github.com/tommcfarlin/WordPress-Plugin-Boilerplate/pull/123#issuecomment-28541913
  *
- * @link       https://tfia.fr
  * @since      1.0.0
  *
  * @package    Silently_Loggedin_Checkout
@@ -29,3 +28,7 @@
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
+
+delete_option( 'slc_email_prompt_page_id' );
+delete_option( 'slc_otp_verify_page_id' );
+delete_option( 'slc_logged_in_redirect_page_id' );
