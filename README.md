@@ -1,191 +1,328 @@
-Permet une connexion silencieuse et automatique des utilisateurs lors du passage en caisse WooCommerce via vérification par email et code OTP.
+# Silently Logged In Checkout
 
-== Description ==
+**Contributor:** Téo F  
+**Tags:** woocommerce, checkout, authentication, otp, email, silent login, guest checkout  
+**Requires WordPress:** 5.0+  
+**Requires WooCommerce:** 3.0+  
+**PHP Version:** 7.4+  
+**License:** GPL-2.0+ ([http://www.gnu.org/licenses/gpl-2.0.txt](http://www.gnu.org/licenses/gpl-2.0.txt))
 
-Le plugin "Silently Logged In Checkout" simplifie le processus de connexion pour vos clients WooCommerce. Au lieu de forcer les utilisateurs non connectés à créer manuellement un compte ou à utiliser un formulaire de connexion complexe, ce plugin leur permet de :
+Enable seamless automatic user login during WooCommerce checkout via email verification and OTP code. Perfect for stores that need a guest-like experience without requiring an existing customer account.
 
-1. Entrer simplement leur adresse email
-2. Recevoir un code OTP (One-Time Password) à 6 chiffres par email
-3. Vérifier le code reçu
-4. Être connectés et créer un compte WooCommerce automatiquement
-5. Accéder directement à la page de paie
+---
 
-**Avantages :**
-- Expérience utilisateur fluide et sans friction
-- Les clients n'ont pas besoin de choisir un mot de passe (réduit les oublis)
-- Compatible avec les thèmes WordPress moderne (y compris FSE - Full Site Editing)
-- Configuration simple via le menu d'administration WooCommerce
-- Emails personnalisés avec le nom de votre boutique
-- Gestion sécurisée des codes OTP avec transients WordPress
+## Description
 
-== Installation ==
+The "Silently Logged In Checkout" plugin streamlines the login process for your WooCommerce customers. Designed for stores that want a guest-like checkout experience while requiring an existing customer account at the time of purchase, this plugin allows users to:
 
-1. Téléchargez le fichier ZIP du plugin
-2. Allez à **Extensions > Ajouter** dans votre tableau de bord WordPress
-3. Cliquez sur **Importer une extension** et sélectionnez le fichier ZIP
-4. Activez le plugin
-5. Accédez à **WooCommerce > Silently Logged In** pour configurer les pages
+1. Simply enter their email address
+2. Receive a 6-digit OTP (One-Time Password) code via email
+3. Verify the code received
+4. Be automatically logged in and have a WooCommerce account created
+5. Access the checkout page directly
 
-**Ou manuellement :**
-1. Décompressez le fichier ZIP
-2. Uploadez le dossier `silently-loggedin-checkout` dans `/wp-content/plugins/`
-3. Activez le plugin depuis le menu Extensions
-4. Configurez le plugin (voir section Configuration)
+### Benefits
 
-== Configuration ==
+- ✅ Seamless user experience with zero friction
+- ✅ Customers don't need to choose a password (reduces forgotten passwords)
+- ✅ Compatible with modern WordPress themes (including FSE - Full Site Editing)
+- ✅ Simple configuration through WooCommerce admin menu
+- ✅ Personalized emails including your store name
+- ✅ Secure OTP code management with WordPress Transients
 
-=== Paramètres initiaux ===
+---
 
-Après activation, rendez-vous dans **WooCommerce > Silently Logged In Checkout** pour configurer :
+## Installation
 
-**1. Page de formulaire email**
-   - Sélectionnez la page qui contiendra le formulaire `[slc_email_prompt]`
-   - Cette page sera accessible après désactivation d'une session utilisateur
-   - Les utilisateurs y entreront leur adresse email pour lancer le processus
+### From WordPress Dashboard
 
-**2. Page de vérification OTP**
-   - Sélectionnez la page qui contiendra le formulaire `[slc_otp_verify]`
-   - Cette page affichera un formulaire pour entrer le code OTP reçu par email
-   - Doit être la même pour tous les clients afin assurer la cohérence
+1. Download the plugin ZIP file
+2. Go to **Plugins > Add New** in your WordPress dashboard
+3. Click **Upload Plugin** and select the ZIP file
+4. Activate the plugin
+5. Go to **WooCommerce > Silently Logged In** to configure the pages
 
-**3. Page de redirection (utilisateurs connectés)**
-   - Sélectionnez la page où rediriger les utilisateurs **déjà connectés** qui visitent l'une des deux pages ci-dessus
-   - Généralement, c'est la page de paie WooCommerce ou votre page d'accueil
-   - Si non configurée, redirection automatique vers la page de paie WooCommerce par défaut
+### Manual Installation
 
-=== Créer les pages ===
+1. Extract the ZIP file
+2. Upload the `silently-loggedin-checkout` folder to `/wp-content/plugins/`
+3. Activate the plugin from the **Plugins** menu
+4. Configure the plugin (see [Configuration](#configuration) section)
 
-Vous devez créer au moins deux pages WordPress contenant les shortcodes :
+---
 
-**Page 1 : Formulaire email**
-- Création : **Pages > Ajouter**
-- Titre suggéré : "Connexion rapide" ou "Vérification email"
-- Contenu : Ajoutez simplement `[slc_email_prompt]` dans l'éditeur
-- Sauvegardez et notez l'ID de la page
-- Sélectionnez-la dans la configuration du plugin
+## Configuration
 
-**Page 2 : Formulaire OTP**
-- Création : **Pages > Ajouter**
-- Titre suggéré : "Vérification du code" ou "Confirmer votre code"
-- Contenu : Ajoutez simplement `[slc_otp_verify]` dans l'éditeur
-- Sauvegardez et notez l'ID de la page
-- Sélectionnez-la dans la configuration du plugin
+### Initial Settings
 
-== Utilisation ==
+After activation, go to **WooCommerce > Silently Logged In Checkout** to configure:
 
-=== Flux utilisateur normal ===
+#### 1. Email Form Page
+- Select the page that will contain the `[slc_email_prompt]` form
+- This page will be showcased after a user session is cleared
+- Users will enter their email address here to start the process
 
-1. **Utilisateur non connecté** visite la page de paie WooCommerce
-2. **WooCommerce** le redirige vers la page de formulaire email (configurable via WooCommerce)
-3. **Utilisateur** entre son email et clique sur "Envoyer le code"
-4. **Plugin** :
-   - Génère un code OTP à 6 chiffres
-   - Stocke le code en toute sécurité pendant 10 minutes
-   - Envoie un email avec le code
-5. **Utilisateur** reçoit l'email et est redirigé vers la page de vérification
-6. **Utilisateur** entre son code OTP
-7. **Plugin** :
-   - Valide le code
-   - Crée un compte WooCommerce avec l'email fourni
-   - Connecte automatiquement l'utilisateur
-8. **Utilisateur** est redirigé vers la page de paie (checkout)
-9. **Utilisateur** finalise l'achat en tant qu'utilisateur connecté
+#### 2. OTP Verification Page
+- Select the page that will contain the `[slc_otp_verify]` form
+- This page will display a form to enter the OTP code received by email
+- Must be the same for all customers to ensure consistency
 
-=== Personnalisation stylistique ===
+#### 3. Redirect Page (Logged-in Users)
+- Select the page where already logged-in users should be redirected if they visit either of the above pages
+- Usually this is your WooCommerce checkout page or homepage
+- If not configured, automatically redirects to the default WooCommerce checkout page
 
-Le plugin utilise un fichier CSS pour styliser les formulaires : `public/css/silently-loggedin-checkout-public.css`
+### Creating the Pages
 
-**Classes CSS disponibles :**
-- `.slc-form-wrapper` : Conteneur principal des formulaires
-- `.slc-error` : Messages d'erreur (couleur rouge)
-- `input[type="email"]`, `input[type="text"]` : Champs de formulaire
-- `button[type="submit"]` : Boutons de soumission
+You must create at least two WordPress pages containing the shortcodes:
 
-Modifiez directement le fichier CSS ou ajoutez du CSS personnalisé dans votre thème pour adapter l'apparence à l'identité visuelle de votre boutique.
+#### Page 1: Email Form
 
-=== Emails ===
+- **Create:** Pages > Add New
+- **Suggested Title:** "Quick Login" or "Email Verification"
+- **Content:** Simply add `[slc_email_prompt]` in the editor
+- **Save:** Save and note the page ID
+- **Configure:** Select it in the plugin configuration
 
-Le plugin envoie des emails automatiquement lors de la génération du code OTP.
+#### Page 2: OTP Form
 
-**Email envoyé :**
-- **Objet** : "Votre code de connexion [Nom de la boutique]"
-- **Contenu** : 
-  - Salutation
-  - Code OTP en 6 chiffres
-  - Durée de validité (10 minutes)
-  - Note de sécurité
+- **Create:** Pages > Add New
+- **Suggested Title:** "Code Verification" or "Confirm Your Code"
+- **Content:** Simply add `[slc_otp_verify]` in the editor
+- **Save:** Save and note the page ID
+- **Configure:** Select it in the plugin configuration
 
-L'email est envoyé au format HTML et inclut automatiquement le nom de votre boutique.
+---
 
-== Livrables ==
+## Usage
 
-=== Shortcodes ===
+### Normal User Flow
 
-**`[slc_email_prompt]`**
-- Affiche le formulaire de saisie d'email
-- Aucun paramètre requis
-- Utilisez-le dans une page WordPress
+```
+1. Non-logged-in user visits checkout page
+                    ↓
+2. Redirect to email form page
+                    ↓
+3. User enters their email
+                    ↓
+4. Plugin generates OTP and sends email
+                    ↓
+5. User redirected to verification page
+                    ↓
+6. User enters OTP code received
+                    ↓
+7. Plugin validates, creates account and logs in user
+                    ↓
+8. Redirect to checkout page
+                    ↓
+9. User completes purchase while logged in
+```
 
-**`[slc_otp_verify]`**
-- Affiche le formulaire de saisie du code OTP
-- Aucun paramètre requis
-- Utilisez-le dans une page WordPress
-- Redirige automatiquement vers le formulaire email si l'utilisateur accède sans passer par le flux normal
+**Detailed Steps:**
 
-== Questions fréquentes ==
+1. **Non-logged-in user** visits the WooCommerce checkout page
+2. **WooCommerce** redirects them to the email form page (configurable via WooCommerce)
+3. **User** enters their email and clicks "Send Code"
+4. **Plugin**:
+   - Generates a 6-digit OTP code
+   - Stores the code securely for 10 minutes
+   - Sends an email with the code
+5. **User** receives the email and is redirected to the verification page
+6. **User** enters their OTP code
+7. **Plugin**:
+   - Validates the code
+   - Creates a WooCommerce account with the provided email
+   - Automatically logs in the user
+8. **User** is redirected to checkout
+9. **User** completes the purchase as a logged-in user
 
-**Q : Quel est le délai d'expiration du code OTP?**
-A : 10 minutes. Après ce délai, l'utilisateur doit recommencer depuis le début.
+### Style Customization
 
-**Q : Combien de fois l'utilisateur peut-il entrer le mauvais code?**
-A : 3 tentatives maximum. Après 3 tentatives échouées, le code OTP est invalidé.
+The plugin uses a CSS file to style the forms: `public/css/silently-loggedin-checkout-public.css`
 
-**Q : Le plugin fonctionne-t-il avec tous les thèmes WordPress?**
-A : Oui, le plugin fonctionne avec tous les thèmes, y compris les thèmes Full Site Editing (FSE). Il génère des pages indépendantes du thème, ce qui signifie que votre en-tête et pied de page personnalisés s'afficheront normalement.
+**Available CSS Classes:**
 
-**Q : Les mots de passe des utilisateurs?**
-A : Le plugin génère des comptes WooCommerce avec des mots de passe aléatoires ou en utilisant l'email comme unique identifier. Les utilisateurs peuvent modifier leur mot de passe ensuite s'ils le souhaitent.
+```css
+.slc-form-wrapper       /* Main form container */
+.slc-error              /* Error messages (red color) */
+input[type="email"]     /* Email fields */
+input[type="text"]      /* Text fields */
+button[type="submit"]   /* Submit buttons */
+```
 
-**Q : Comment puis-je tester le plugin?**
-A : 
-1. Déconnectez-vous
-2. Rendez-vous sur la page de paie
-3. Entrez une adresse email valide
-4. Vérifiez votre boîte mail pour le code OTP
-5. Entrez le code sur la page de vérification
+Modify the CSS file directly or add custom CSS to your theme to match your store's visual identity.
 
-**Q : Que se passe-t-il si un utilisateur déjà connecté visite la page?**
-A : Il est automatiquement redirigé vers la page configurée dans les paramètres (par défaut, la page de paie WooCommerce).
+### Emails
 
-== Sécurité ==
+The plugin automatically sends emails when generating the OTP code.
 
-- **Codes OTP** : Générés de façon cryptographique et stockés via l'API WordPress Transients
-- **Validation CSRF** : Tous les formulaires incluent des vérifications de nonce WordPress
-- **Hachage d'email** : Les emails sont hachés (MD5) lors du stockage du code OTP
-- **Limitation de tentatives** : Maximum 3 tentatives de code incorrect avant invalidation
-- **HTTPS recommandé** : Bien que non obligatoire, HTTPS est fortement recommandé
+**Email Sent:**
+- **Subject:** "Your login code [Store Name]"
+- **Content:**
+  - Personalized greeting
+  - 6-digit OTP code in bold
+  - Validity duration (10 minutes)
+  - Security note
 
-== Support ==
+The email is sent in HTML format and automatically includes your store name.
 
-Pour toute question ou problème :
-- Consultez la section "Questions fréquentes"
-- Vérifiez que WooCommerce est activé et mis à jour
-- Vérifiez que les pages sont correctement configurées dans le menu admin
-- Assurez-vous que vos serveur de messagerie WordPress est correctement configuré pour envoyer des emails
+---
 
-== Historique des modifications ==
+## Technical Documentation
 
-= 1.0.0 =
-- Version initiale
-- Formulaires de connexion par email et OTP
-- Création automatique de comptes WooCommerce
-- Redirection intelligente des utilisateurs connectés
-- Configuration via le panneau d'administration WooCommerce
+### Shortcodes
 
-== Licence ==
+#### `[slc_email_prompt]`
 
-Ce plugin est sous licence GPL-2.0+. Consultez LICENSE.txt pour plus de détails.
+Displays the email input form.
 
-== Auteur ==
+```
+[slc_email_prompt]
+```
 
-Développé par Téo F
+- **Parameters:** None
+- **Use:** In a WordPress page
+- **Displays:** Form with email field and submit button
+
+#### `[slc_otp_verify]`
+
+Displays the OTP code input form.
+
+```
+[slc_otp_verify]
+```
+
+- **Parameters:** None
+- **Use:** In a WordPress page
+- **Displays:** Form with OTP field and verification button
+- **Redirect:** Redirects to email form if user accesses without going through normal flow
+
+### Plugin Structure
+
+```
+silently-loggedin-checkout/
+├── silently-loggedin-checkout.php          # Main file
+├── uninstall.php                            # Cleanup on deletion
+├── admin/
+│   ├── class-silently-loggedin-checkout-admin.php
+│   ├── js/silently-loggedin-checkout-admin.js
+│   ├── css/silently-loggedin-checkout-admin.css
+│   └── partials/silently-loggedin-checkout-admin-display.php
+├── includes/
+│   ├── class-silently-loggedin-checkout.php
+│   ├── class-silently-loggedin-checkout-loader.php
+│   ├── class-silently-loggedin-checkout-i18n.php
+│   ├── class-silently-loggedin-checkout-activator.php
+│   └── class-silently-loggedin-checkout-deactivator.php
+├── public/
+│   ├── class-silently-loggedin-checkout-public.php
+│   ├── js/silently-loggedin-checkout-public.js
+│   ├── css/silently-loggedin-checkout-public.css
+│   └── partials/silently-loggedin-checkout-public-display.php
+├── languages/
+│   └── silently-loggedin-checkout.pot
+└── README.md
+```
+
+---
+
+## Frequently Asked Questions
+
+### Q: What is the OTP code expiration time?
+
+**A:** 10 minutes. After this time, the user must start over by submitting their email again.
+
+### Q: How many times can a user enter the wrong code?
+
+**A:** Maximum 3 attempts. After 3 failed attempts, the OTP code is invalidated and the user must start over.
+
+### Q: Does the plugin work with all WordPress themes?
+
+**A:** Yes, the plugin works with all themes, including Full Site Editing (FSE) themes. The plugin uses WordPress pages independent of the theme, which means your custom header and footer will display normally.
+
+### Q: How does the plugin handle passwords?
+
+**A:** The plugin generates WooCommerce accounts with random passwords. Users can change their password later from their account dashboard if they wish.
+
+### Q: How do I test the plugin?
+
+**A:** Follow these steps:
+1. Log out
+2. Go to checkout page
+3. Enter a valid email address
+4. Check your email for the OTP code
+5. Enter the code on the verification page
+6. Confirm you are automatically logged in
+
+### Q: What happens if an already logged-in user visits the page?
+
+**A:** They are automatically redirected to the page configured in the settings (by default, the WooCommerce checkout page).
+
+### Q: Why am I not receiving emails?
+
+**A:** Make sure your WordPress email server is properly configured. See the [Support](#support) section for more details.
+
+---
+
+## Security
+
+- 🔒 **OTP Codes:** Generated cryptographically and stored via WordPress Transients API
+- 🔒 **CSRF Validation:** All forms include WordPress nonce verification
+- 🔒 **Email Hashing:** Emails are hashed (MD5) when storing the OTP code
+- 🔒 **Attempt Limitation:** Maximum 3 incorrect code attempts before invalidation
+- 🔒 **HTTPS Recommended:** While not required, HTTPS is strongly recommended
+
+---
+
+## Support
+
+### Troubleshooting
+
+To resolve common issues:
+
+- ✓ Check that **WooCommerce is activated** and up to date
+- ✓ Verify that **pages are correctly configured** in admin menu
+- ✓ Ensure your **WordPress email server** is properly configured
+- ✓ Verify that both pages contain the `[slc_email_prompt]` and `[slc_otp_verify]` shortcodes
+- ✓ In plugin configuration, ensure all three pages are selected
+
+### Contact Support
+
+For questions or issues:
+- Consult this documentation and the "Frequently Asked Questions" section
+- Check WordPress error logs in `/wp-content/debug.log`
+- Verify with your hosting provider that the `wp_mail()` function works correctly
+
+---
+
+## Changelog
+
+### Version 1.0.0
+
+- ✨ Initial release
+- ✨ Email and OTP login forms
+- ✨ Automatic WooCommerce account creation
+- ✨ Smart redirect for logged-in users
+- ✨ Configuration via WooCommerce admin panel
+- ✨ FSE (Full Site Editing) theme support
+- ✨ Personalized HTML emails with store name
+
+---
+
+## License
+
+This plugin is licensed under **GPL-2.0+**. See [LICENSE.txt](LICENSE.txt) for details.
+
+---
+
+## Author
+
+Developed by **Téo F**
+
+---
+
+## Resources
+
+- [WordPress Plugin Documentation](https://developer.wordpress.org/plugins/)
+- [WooCommerce Documentation](https://woocommerce.com/documentation/)
+- [WordPress Transients API](https://developer.wordpress.org/plugins/caching/working-with-transients/)
