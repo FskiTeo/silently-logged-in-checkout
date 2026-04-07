@@ -150,8 +150,8 @@ class Silently_Loggedin_Checkout_Public {
 		ob_start();
 		?>
 		<div class="slc-form-wrapper">
-			<h2><?php esc_html_e( 'Entrez votre adresse e-mail', 'silently-loggedin-checkout' ); ?></h2>
-			<p><?php esc_html_e( 'Afin de finaliser votre commande, veuillez entrer votre adresse e-mail. Un compte sera créé automatiquement si vous n\'en avez pas encore.', 'silently-loggedin-checkout' ); ?></p>
+			<h2><?php echo esc_html( $this->get_ui_text( 'email_prompt_title' ) ); ?></h2>
+			<p><?php echo esc_html( $this->get_ui_text( 'email_prompt_intro' ) ); ?></p>
 
 			<?php if ( $error ) : ?>
 				<p class="slc-error">
@@ -164,7 +164,7 @@ class Silently_Loggedin_Checkout_Public {
 
 				<p>
 					<label for="slc_email">
-						<?php esc_html_e( 'Adresse e-mail :', 'silently-loggedin-checkout' ); ?>
+						<?php echo esc_html( $this->get_ui_text( 'email_label' ) ); ?>
 					</label>
 					<input
 						type="email"
@@ -176,7 +176,7 @@ class Silently_Loggedin_Checkout_Public {
 				</p>
 				<p>
 					<button type="submit">
-						<?php esc_html_e( 'Continuer →', 'silently-loggedin-checkout' ); ?>
+						<?php echo esc_html( $this->get_ui_text( 'email_submit_button' ) ); ?>
 					</button>
 				</p>
 			</form>
@@ -214,20 +214,27 @@ class Silently_Loggedin_Checkout_Public {
 			$email,
 			get_permalink( get_option( 'slc_otp_verify_page_id' ) )
 		);
+		$otp_length = $this->get_otp_length();
+		$otp_intro  = $this->apply_template_tokens(
+			$this->get_ui_text( 'otp_intro_template' ),
+			array(
+				'{email}'      => '<strong>' . esc_html( $email ) . '</strong>',
+				'{minutes}'    => (string) ceil( $this->get_otp_expiry() / 60 ),
+				'{otp_length}' => (string) $otp_length,
+			)
+		);
+		$otp_label  = $this->apply_template_tokens(
+			$this->get_ui_text( 'otp_label_template' ),
+			array(
+				'{otp_length}' => (string) $otp_length,
+			)
+		);
 
 		ob_start();
 		?>
 		<div class="slc-form-wrapper">
-			<h2><?php esc_html_e( 'Entrez votre code de vérification', 'silently-loggedin-checkout' ); ?></h2>
-			<p>
-				<?php
-				printf(
-					/* translators: %s: email address */
-					esc_html__( 'Un code à 6 chiffres a été envoyé à %s. Saisissez-le ci-dessous pour vous connecter (valable 10 minutes).', 'silently-loggedin-checkout' ),
-					'<strong>' . esc_html( $email ) . '</strong>'
-				);
-				?>
-			</p>
+			<h2><?php echo esc_html( $this->get_ui_text( 'otp_title' ) ); ?></h2>
+			<p><?php echo wp_kses_post( $otp_intro ); ?></p>
 
 			<?php if ( $error ) : ?>
 				<p class="slc-error">
@@ -241,29 +248,29 @@ class Silently_Loggedin_Checkout_Public {
 
 				<p>
 					<label for="slc_otp">
-						<?php esc_html_e( 'Code OTP (6 chiffres) :', 'silently-loggedin-checkout' ); ?>
+						<?php echo esc_html( $otp_label ); ?>
 					</label>
 					<input
 						type="text"
 						id="slc_otp"
 						name="slc_otp"
 						required
-						maxlength="6"
-						pattern="[0-9]{6}"
+						maxlength="<?php echo esc_attr( (string) $otp_length ); ?>"
+						pattern="<?php echo esc_attr( '[0-9]{' . $otp_length . '}' ); ?>"
 						inputmode="numeric"
 						autocomplete="one-time-code"
 					>
 				</p>
 				<p>
 					<button type="submit">
-						<?php esc_html_e( 'Vérifier →', 'silently-loggedin-checkout' ); ?>
+						<?php echo esc_html( $this->get_ui_text( 'otp_submit_button' ) ); ?>
 					</button>
 				</p>
 			</form>
 
 			<p class="slc-back-link">
 				<a href="<?php echo esc_url( $email_prompt_url ); ?>">
-					← <?php esc_html_e( 'Changer d\'adresse e-mail', 'silently-loggedin-checkout' ); ?>
+					← <?php echo esc_html( $this->get_ui_text( 'otp_back_to_email' ) ); ?>
 				</a>
 			</p>
 		</div>
@@ -310,7 +317,7 @@ class Silently_Loggedin_Checkout_Public {
 		set_transient(
 			$this->get_otp_transient_key( $email ),
 			array( 'otp' => $otp, 'attempts' => 0 ),
-			self::OTP_EXPIRY
+			$this->get_otp_expiry()
 		);
 		$this->send_otp_email( $email, $otp );
 
@@ -394,14 +401,14 @@ class Silently_Loggedin_Checkout_Public {
 		}
 
 		// Wrong OTP.
-		if ( $transient['attempts'] >= self::OTP_MAX_ATTEMPTS ) {
+		if ( $transient['attempts'] >= $this->get_otp_max_attempts() ) {
 			delete_transient( $transient_key );
 			wp_safe_redirect( add_query_arg( 'slc_error', 'otp_max_attempts', $email_prompt_url ) );
 			exit;
 		}
 
 		// Still has attempts left – persist updated counter.
-		set_transient( $transient_key, $transient, self::OTP_EXPIRY );
+		set_transient( $transient_key, $transient, $this->get_otp_expiry() );
 		wp_safe_redirect( add_query_arg( 'slc_error', 'otp_invalid', $otp_page_url ) );
 		exit;
 	}
@@ -416,7 +423,14 @@ class Silently_Loggedin_Checkout_Public {
 	 * @return string
 	 */
 	private function generate_otp() {
-		return str_pad( (string) random_int( 0, 999999 ), 6, '0', STR_PAD_LEFT );
+		$otp_length = $this->get_otp_length();
+		$otp        = '';
+
+		for ( $i = 0; $i < $otp_length; $i++ ) {
+			$otp .= (string) random_int( 0, 9 );
+		}
+
+		return $otp;
 	}
 
 	/**
@@ -453,25 +467,32 @@ class Silently_Loggedin_Checkout_Public {
 	 * @param string $otp   6-digit code.
 	 */
 	private function send_otp_email( $email, $otp ) {
+		$templates = $this->get_email_templates();
 		$shop_name = get_bloginfo( 'name' );
-		$subject   = sprintf(
-			/* translators: %s: shop name */
-			__( 'Votre code de connexion %s', 'silently-loggedin-checkout' ),
-			$shop_name
+		$minutes   = (string) ceil( $this->get_otp_expiry() / 60 );
+
+		$subject = $this->apply_template_tokens(
+			$templates['subject_template'],
+			array(
+				'{shop_name}'  => $shop_name,
+				'{otp}'        => $otp,
+				'{minutes}'    => $minutes,
+				'{otp_length}' => (string) $this->get_otp_length(),
+			)
 		);
 
-		$message = sprintf(
-			/* translators: %1$s: shop name, %2$s: 6-digit OTP code */
-			__(
-				"Bonjour,<br><br>Votre code de connexion %1\$s est : <strong>%2\$s</strong><br><br>Ce code est valable pendant 10 minutes.<br><br>Si vous n'avez pas demandé ce code, vous pouvez ignorer cet e-mail.",
-				'silently-loggedin-checkout'
-			),
-			$shop_name,
-			$otp
+		$message = $this->apply_template_tokens(
+			$templates['body_template'],
+			array(
+				'{shop_name}'  => esc_html( $shop_name ),
+				'{otp}'        => esc_html( $otp ),
+				'{minutes}'    => esc_html( $minutes ),
+				'{otp_length}' => esc_html( (string) $this->get_otp_length() ),
+			)
 		);
 
 		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
-		wp_mail( $email, $subject, $message, $headers );
+		wp_mail( $email, wp_strip_all_tags( $subject ), wp_kses_post( $message ), $headers );
 	}
 
 	/**
@@ -547,7 +568,82 @@ class Silently_Loggedin_Checkout_Public {
 	 * @return string
 	 */
 	private function get_error_message( $code ) {
-		$messages = array(
+		$messages = $this->get_error_texts();
+
+		return isset( $messages[ $code ] )
+			? $messages[ $code ]
+			: $messages['generic_error'];
+	}
+
+	/**
+	 * Return OTP expiry in seconds from settings.
+	 *
+	 * @return int
+	 */
+	private function get_otp_expiry() {
+		$expiry = (int) get_option( 'slc_otp_expiry', self::OTP_EXPIRY );
+
+		return max( 60, $expiry );
+	}
+
+	/**
+	 * Return maximum OTP attempts from settings.
+	 *
+	 * @return int
+	 */
+	private function get_otp_max_attempts() {
+		$attempts = (int) get_option( 'slc_otp_max_attempts', self::OTP_MAX_ATTEMPTS );
+
+		return max( 1, $attempts );
+	}
+
+	/**
+	 * Return OTP length from settings.
+	 *
+	 * @return int
+	 */
+	private function get_otp_length() {
+		$length = (int) get_option( 'slc_otp_length', 6 );
+
+		if ( $length < 4 ) {
+			return 4;
+		}
+
+		if ( $length > 9 ) {
+			return 9;
+		}
+
+		return $length;
+	}
+
+	/**
+	 * Return UI texts with defaults.
+	 *
+	 * @return array<string, string>
+	 */
+	private function get_ui_texts() {
+		$defaults = array(
+			'email_prompt_title'  => __( 'Entrez votre adresse e-mail', 'silently-loggedin-checkout' ),
+			'email_prompt_intro'  => __( 'Afin de finaliser votre commande, veuillez entrer votre adresse e-mail. Un compte sera créé automatiquement si vous n\'en avez pas encore.', 'silently-loggedin-checkout' ),
+			'email_label'         => __( 'Adresse e-mail :', 'silently-loggedin-checkout' ),
+			'email_submit_button' => __( 'Continuer →', 'silently-loggedin-checkout' ),
+			'otp_title'           => __( 'Entrez votre code de vérification', 'silently-loggedin-checkout' ),
+			'otp_intro_template'  => __( 'Un code à {otp_length} chiffres a été envoyé à {email}. Saisissez-le ci-dessous pour vous connecter (valable {minutes} minutes).', 'silently-loggedin-checkout' ),
+			'otp_label_template'  => __( 'Code OTP ({otp_length} chiffres) :', 'silently-loggedin-checkout' ),
+			'otp_submit_button'   => __( 'Vérifier →', 'silently-loggedin-checkout' ),
+			'otp_back_to_email'   => __( 'Changer d\'adresse e-mail', 'silently-loggedin-checkout' ),
+		);
+
+		return wp_parse_args( (array) get_option( 'slc_texts', array() ), $defaults );
+	}
+
+	/**
+	 * Return error texts with defaults.
+	 *
+	 * @return array<string, string>
+	 */
+	private function get_error_texts() {
+		$defaults = array(
 			'invalid_nonce'       => __( 'Requête invalide. Veuillez réessayer.', 'silently-loggedin-checkout' ),
 			'invalid_email'       => __( 'Adresse e-mail invalide.', 'silently-loggedin-checkout' ),
 			'registration_failed' => __( 'Impossible de créer votre compte. Veuillez réessayer.', 'silently-loggedin-checkout' ),
@@ -555,11 +651,53 @@ class Silently_Loggedin_Checkout_Public {
 			'otp_invalid'         => __( 'Code OTP incorrect. Veuillez réessayer.', 'silently-loggedin-checkout' ),
 			'otp_max_attempts'    => __( 'Trop de tentatives incorrectes. Veuillez recommencer depuis le début.', 'silently-loggedin-checkout' ),
 			'user_not_found'      => __( 'Utilisateur introuvable. Veuillez réessayer.', 'silently-loggedin-checkout' ),
+			'generic_error'       => __( 'Une erreur est survenue. Veuillez réessayer.', 'silently-loggedin-checkout' ),
 		);
 
-		return isset( $messages[ $code ] )
-			? $messages[ $code ]
-			: __( 'Une erreur est survenue. Veuillez réessayer.', 'silently-loggedin-checkout' );
+		return wp_parse_args( (array) get_option( 'slc_error_texts', array() ), $defaults );
+	}
+
+	/**
+	 * Return e-mail templates with defaults.
+	 *
+	 * @return array<string, string>
+	 */
+	private function get_email_templates() {
+		$defaults = array(
+			'subject_template' => __( 'Votre code de connexion {shop_name}', 'silently-loggedin-checkout' ),
+			'body_template'    => __( "Bonjour,<br><br>Votre code de connexion {shop_name} est : <strong>{otp}</strong><br><br>Ce code est valable pendant {minutes} minutes.<br><br>Si vous n'avez pas demandé ce code, vous pouvez ignorer cet e-mail.", 'silently-loggedin-checkout' ),
+		);
+
+		return wp_parse_args( (array) get_option( 'slc_email_templates', array() ), $defaults );
+	}
+
+	/**
+	 * Return one UI text by key.
+	 *
+	 * @param string $key Text key.
+	 * @return string
+	 */
+	private function get_ui_text( $key ) {
+		$texts = $this->get_ui_texts();
+
+		return isset( $texts[ $key ] ) ? (string) $texts[ $key ] : '';
+	}
+
+	/**
+	 * Replace known template tokens in texts.
+	 *
+	 * @param string               $template Template with tokens.
+	 * @param array<string, mixed> $tokens   Token map.
+	 * @return string
+	 */
+	private function apply_template_tokens( $template, array $tokens ) {
+		$normalized_tokens = array();
+
+		foreach ( $tokens as $token => $value ) {
+			$normalized_tokens[ (string) $token ] = (string) $value;
+		}
+
+		return strtr( (string) $template, $normalized_tokens );
 	}
 
 	// =========================================================================
