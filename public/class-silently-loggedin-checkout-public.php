@@ -91,10 +91,14 @@ class Silently_Loggedin_Checkout_Public {
 		// --- POST handling on SLC pages ---
 		if ( $is_email_prompt || $is_otp_verify ) {
 			if ( is_user_logged_in() ) {
-				$redirect_page_id = (int) get_option( 'slc_logged_in_redirect_page_id' );
-				$redirect_url     = $redirect_page_id
-					? get_permalink( $redirect_page_id )
-					: wc_get_checkout_url();
+				if ( $is_otp_verify && function_exists( 'wc_get_cart_url' ) ) {
+					$redirect_url = wc_get_cart_url();
+				} else {
+					$redirect_page_id = (int) get_option( 'slc_logged_in_redirect_page_id' );
+					$redirect_url     = $redirect_page_id
+						? get_permalink( $redirect_page_id )
+						: wc_get_checkout_url();
+				}
 				wp_safe_redirect( $redirect_url );
 				exit;
 			}
@@ -192,7 +196,7 @@ class Silently_Loggedin_Checkout_Public {
 		}
 
 		$email = isset( $_GET['slc_email'] )
-			? sanitize_email( wp_unslash( $_GET['slc_email'] ) )
+			? $this->sanitize_email_value( wp_unslash( $_GET['slc_email'] ) )
 			: '';
 		$error = isset( $_GET['slc_error'] )
 			? sanitize_text_field( wp_unslash( $_GET['slc_error'] ) )
@@ -274,8 +278,8 @@ class Silently_Loggedin_Checkout_Public {
 	/**
 	 * Handle submission of the email form.
 	 *
-	 * - Unknown email  → create WooCommerce customer, auto-login, redirect to checkout.
-	 * - Existing email → generate OTP, send by e-mail, redirect to OTP page.
+	 * Always generates and sends an OTP code, then redirects to the OTP page.
+	 * Account creation (for unknown emails) is deferred until OTP validation.
 	 */
 	public function handle_email_submission() {
 		// CSRF check.
@@ -294,7 +298,7 @@ class Silently_Loggedin_Checkout_Public {
 		}
 
 		$email = isset( $_POST['slc_email'] )
-			? sanitize_email( wp_unslash( $_POST['slc_email'] ) )
+			? $this->sanitize_email_value( wp_unslash( $_POST['slc_email'] ) )
 			: '';
 
 		if ( ! is_email( $email ) ) {
@@ -302,39 +306,22 @@ class Silently_Loggedin_Checkout_Public {
 			exit;
 		}
 
-		$existing_user = get_user_by( 'email', $email );
+		$otp = $this->generate_otp();
+		set_transient(
+			$this->get_otp_transient_key( $email ),
+			array( 'otp' => $otp, 'attempts' => 0 ),
+			self::OTP_EXPIRY
+		);
+		$this->send_otp_email( $email, $otp );
 
-		if ( $existing_user ) {
-			// Existing account → OTP flow.
-			$otp = $this->generate_otp();
-			set_transient(
-				$this->get_otp_transient_key( $email ),
-				array( 'otp' => $otp, 'attempts' => 0 ),
-				self::OTP_EXPIRY
-			);
-			$this->send_otp_email( $email, $otp );
-
-			wp_safe_redirect( add_query_arg( 'slc_email', $email, $otp_verify_url ) );
-			exit;
-		}
-
-		// New account → create customer and auto-login.
-		$user_id = $this->create_customer( $email );
-
-		if ( is_wp_error( $user_id ) ) {
-			wp_safe_redirect( add_query_arg( 'slc_error', 'registration_failed', $email_prompt_url ) );
-			exit;
-		}
-
-		$this->auto_login( $user_id );
-		wp_safe_redirect( wc_get_checkout_url() );
+		wp_safe_redirect( add_query_arg( 'slc_email', $email, $otp_verify_url ) );
 		exit;
 	}
 
 	/**
 	 * Handle submission of the OTP form.
 	 *
-	 * - Valid OTP   → delete transient, auto-login, redirect to checkout.
+	 * - Valid OTP   → delete transient, create customer if needed, auto-login, redirect to checkout.
 	 * - Invalid OTP → decrement remaining attempts; on exhaustion send back to email prompt.
 	 */
 	public function handle_otp_submission() {
@@ -354,7 +341,7 @@ class Silently_Loggedin_Checkout_Public {
 		}
 
 		$email = isset( $_POST['slc_email'] )
-			? sanitize_email( wp_unslash( $_POST['slc_email'] ) )
+			? $this->sanitize_email_value( wp_unslash( $_POST['slc_email'] ) )
 			: '';
 		// Allow only digits.
 		$otp   = isset( $_POST['slc_otp'] )
@@ -384,13 +371,24 @@ class Silently_Loggedin_Checkout_Public {
 			delete_transient( $transient_key );
 
 			$user = get_user_by( 'email', $email );
-			if ( ! $user ) {
-				// Should not happen, but guard anyway.
-				wp_safe_redirect( add_query_arg( 'slc_error', 'user_not_found', $email_prompt_url ) );
-				exit;
+
+			if ( $user ) {
+				$user_id = $user->ID;
+			} else {
+				$user_id = $this->create_customer( $email );
+				if ( is_wp_error( $user_id ) ) {
+					// Handle race condition where account could be created in parallel.
+					$existing_user = get_user_by( 'email', $email );
+					if ( $existing_user ) {
+						$user_id = $existing_user->ID;
+					} else {
+						wp_safe_redirect( add_query_arg( 'slc_error', 'registration_failed', $email_prompt_url ) );
+						exit;
+					}
+				}
 			}
 
-			$this->auto_login( $user->ID );
+			$this->auto_login( $user_id );
 			wp_safe_redirect( wc_get_checkout_url() );
 			exit;
 		}
@@ -419,6 +417,23 @@ class Silently_Loggedin_Checkout_Public {
 	 */
 	private function generate_otp() {
 		return str_pad( (string) random_int( 0, 999999 ), 6, '0', STR_PAD_LEFT );
+	}
+
+	/**
+	 * Sanitize an email while preserving plus aliases that may arrive as spaces.
+	 *
+	 * Some URL decoders can convert + to a space. Re-map spaces to + before
+	 * sanitize_email() so transient keys stay consistent for addresses like
+	 * user+tag@example.com.
+	 *
+	 * @param string $email_raw Raw email value from request.
+	 * @return string
+	 */
+	private function sanitize_email_value( $email_raw ) {
+		$email_raw = trim( (string) $email_raw );
+		$email_raw = str_replace( ' ', '+', $email_raw );
+
+		return sanitize_email( $email_raw );
 	}
 
 	/**

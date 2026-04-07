@@ -7,18 +7,18 @@
 **PHP Version:** 7.4+  
 **License:** GPL-2.0+ ([http://www.gnu.org/licenses/gpl-2.0.txt](http://www.gnu.org/licenses/gpl-2.0.txt))
 
-Enable seamless automatic user login during WooCommerce checkout via email verification and OTP code. Perfect for stores that need a guest-like experience without requiring an existing customer account.
+Enable seamless automatic user login during WooCommerce checkout via email verification and OTP code. Perfect for stores that need a guest-like experience while ensuring each email is validated before login or account creation.
 
 ---
 
 ## Description
 
-The "Silently Logged In Checkout" plugin streamlines the login process for your WooCommerce customers. Designed for stores that want a guest-like checkout experience while requiring an existing customer account at the time of purchase, this plugin allows users to:
+The "Silently Logged In Checkout" plugin streamlines the login process for your WooCommerce customers. Designed for stores that want a guest-like checkout experience while validating each email with OTP, this plugin allows users to:
 
 1. Simply enter their email address
 2. Receive a 6-digit OTP (One-Time Password) code via email
 3. Verify the code received
-4. Be automatically logged in and have a WooCommerce account created
+4. Be automatically logged in (and have a WooCommerce account created if needed)
 5. Access the checkout page directly
 
 ### Benefits
